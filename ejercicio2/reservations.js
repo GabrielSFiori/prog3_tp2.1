@@ -1,6 +1,43 @@
-class Customer {}
+class Customer {
+    constructor(id, name, email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
 
-class Reservation {}
+    }
+
+    get info() {
+        return `${this.name} (${this.email})`;
+    }
+}
+
+
+class Reservation {
+    constructor(id, customer, date, guests) {
+        this.id = id;
+        this.customer = customer;
+        this.date = date;
+        this.guests = guests;
+    }
+    get info(){
+        return `${this.customer.info} - ${this.guests} personas - ${this.date.toLocaleString()}`
+    }
+    
+    static validateReservation(reservationData) {
+        const { date, guests } = reservationData;
+        const today = new Date();
+        const reservationDate = new Date(date);
+
+        if (reservationDate < today) {
+            return false;
+        }
+        if (guests <= 0) {
+            return false;
+        }
+        return true;
+        
+    }
+}
 
 class Restaurant {
     constructor(name) {
@@ -77,9 +114,18 @@ const restaurant = new Restaurant("El Lojal Kolinar");
 const customer1 = new Customer(1, "Shallan Davar", "shallan@gmail.com");
 const reservation1 = new Reservation(1, customer1, "2024-12-31T20:00:00", 4);
 
+
 if (Reservation.validateReservation(reservation1.date, reservation1.guests)) {
     restaurant.addReservation(reservation1);
     restaurant.render();
 } else {
     alert("Datos de reserva inválidos");
 }
+
+// prueba de validacion retorna false 
+// al agregar numero negativo o 0 y la fecha anterior a la actual
+const invalid = Reservation.validateReservation({
+    date: "2023-01-01T19:30:00",
+    guests: 0
+});
+console.log(invalid);
