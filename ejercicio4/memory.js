@@ -3,6 +3,7 @@ class Card {
         this.name = name;
         this.img = img;
         this.isFlipped = false;
+        this.isMatched = false;
         this.element = this.#createCardElement();
     }
 
@@ -31,6 +32,28 @@ class Card {
         const cardElement = this.element.querySelector(".card");
         cardElement.classList.remove("flipped");
     }
+
+    publicUnflip() { 
+        this.#unflip();
+    }
+
+    toggleFlip() {
+        if (this.isFlipped) {
+            this.publicUnflip(); 
+            this.isFlipped = false;
+        } else {
+            this.#flip();
+            this.isFlipped = true;
+        }
+    }
+
+    matchedCards(otherCard) {
+        return this.name === otherCard.name;
+    }
+
+    setMatched() {
+        this.isMatched = true;
+    }
 }
 
 class Board {
@@ -43,7 +66,6 @@ class Board {
     #calculateColumns() {
         const numCards = this.cards.length;
         let columns = Math.floor(numCards / 2);
-
         columns = Math.max(2, Math.min(columns, 12));
 
         if (columns % 2 !== 0) {
@@ -74,7 +96,25 @@ class Board {
             this.onCardClick(card);
         }
     }
+
+    shuffleCards() {
+        for (let i = this.cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+        }
+    }
+
+    reset() {
+        this.cards.forEach(card => {
+            card.isFlipped = false;
+            card.isMatched = false;
+            card.publicUnflip(); 
+        });
+        this.shuffleCards();
+        this.render();
+    }
 }
+
 
 class MemoryGame {
     constructor(board, flipDuration = 500) {
@@ -83,9 +123,7 @@ class MemoryGame {
         this.matchedCards = [];
         if (flipDuration < 350 || isNaN(flipDuration) || flipDuration > 3000) {
             flipDuration = 350;
-            alert(
-                "La duración de la animación debe estar entre 350 y 3000 ms, se ha establecido a 350 ms"
-            );
+            alert("La duración de la animación debe estar entre 350 y 3000 ms, se ha establecido a 350 ms");
         }
         this.flipDuration = flipDuration;
         this.board.onCardClick = this.#handleCardClick.bind(this);
@@ -101,6 +139,25 @@ class MemoryGame {
                 setTimeout(() => this.checkForMatch(), this.flipDuration);
             }
         }
+    }
+
+    checkForMatch() {
+        if (this.flippedCards[0].matchedCards(this.flippedCards[1])) {
+            this.flippedCards.forEach(card => card.setMatched());
+            this.matchedCards.push(...this.flippedCards);
+            this.flippedCards = [];
+        } else {
+            setTimeout(() => {
+                this.flippedCards.forEach(card => card.toggleFlip());
+                this.flippedCards = [];
+            }, this.flipDuration);
+        }
+    }
+
+    resetGame() {
+        this.board.reset();
+        this.matchedCards = [];
+        this.flippedCards = [];
     }
 }
 
